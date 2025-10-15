@@ -112,8 +112,6 @@ Desacopla el cliente: no hay que gestionar headers ni almacenar tokens en localS
 
 ---
 
-
-
 ## 📘 Documentación Swagger
 
 Se usa **L5-Swagger**:
@@ -132,6 +130,16 @@ En `.env`:
 SAIL_XDEBUG_MODE=develop,debug,coverage
 SAIL_XDEBUG_CONFIG=client_host=host.docker.internal
 ```
+# =============================
+# ⚙️ Feature Flags
+# =============================
+
+Estos flags permiten habilitar o bloquear acciones  sin cambiar código 
+
+FEAT_POST_MODIFY_OTHERS (false por defecto): si está en true, usuarios  pueden editar/eliminar posts de otros. En false, solo el dueño del post puede modificarlos (resto → 403 Forbidden).
+
+FEAT_USER_MODIFY_OTHERS (false por defecto): si está en true, se permite crear/editar/deshabilitar/eliminar otros usuarios. En false, solo autogestión (actualizar su propio perfil).
+
 
 ---
 
