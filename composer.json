@@ -1,0 +1,116 @@
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "darkaonline/l5-swagger": "^9.0",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "lcobucci/jwt": "4.3",
+        "tymon/jwt-auth": "2.2"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.25",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3",
+        "rector/rector": "^2.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+       "app:doctor": [
+            "@php -d xdebug.mode=off -r \"passthru('composer diagnose', $e); if($e!==0) echo 'composer diagnose: WARN (exit '. $e .')'.PHP_EOL;\"",
+            "composer check-platform-reqs",
+            "php -d xdebug.mode=off -r \"echo 'PHP '.PHP_VERSION.PHP_EOL;\"",
+            "php -d xdebug.mode=off -r \"$exts=['pdo','pdo_sqlite','mbstring','openssl','tokenizer','xml','ctype','json','fileinfo','curl','dom','filter','intl','bcmath','sodium','gd']; foreach($exts as $e){echo str_pad($e,14).' : '.(extension_loaded($e)?'OK':'MISSING').PHP_EOL;}\"",
+            "php -d xdebug.mode=off -r \"$drivers=class_exists('PDO')?PDO::getAvailableDrivers():[]; echo 'PDO sqlite: '.(in_array('sqlite',$drivers)?'OK':'MISSING').PHP_EOL;\""
+        ],
+        "app:init": [
+            "@composer install",
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "php artisan key:generate",
+            "@php -r \"if (!file_exists('database/database.sqlite')) { if (!is_dir('database')) { mkdir('database', 0777, true); } touch('database/database.sqlite'); }\"",
+            "php artisan migrate --seed"
+         ],
+         "app:dev": [
+            "@composer dump-autoload -o",
+            "@php artisan optimize:clear",
+            "@php artisan l5-swagger:generate",
+            "@php artisan config:clear",
+            "@php artisan route:list",
+            "@php artisan serve"
+        ],
+        "app:check": "composer lint && composer rector:dry",
+        "app:fix": "composer fix && composer rector && composer fix",
+        "db:migrate": [
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --ansi --force",
+            "@php artisan db:seed --ansi",
+            "@php artisan l5-swagger:generate --ansi"
+        ],
+        "db:fresh": [
+            "@php -r \"file_exists('database/database.sqlite') && unlink('database/database.sqlite');\"",
+            "@php -r \"touch('database/database.sqlite');\"",
+            "@php artisan migrate:fresh --seed --ansi --force",
+            "@php artisan l5-swagger:generate --ansi"
+        ],
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+         ],
+        "pre-package-uninstall": [
+            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
+        ],
+        "lint": "pint -v --test",
+        "fix": "pint",
+        "rector": "rector process --ansi",
+        "rector:dry": "rector process --dry-run --ansi",
+        "app:doc": "@php artisan l5-swagger:generate"
+        },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "process-timeout": 0,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
