@@ -22,7 +22,7 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
-
+/database/database.sqlite
 
 storage/framework/phpstan/
 storage/framework/nette.configurator/
