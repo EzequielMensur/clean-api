@@ -1,0 +1,28 @@
+#!/usr/bin/env php
+<?php
+
+use Illuminate\Foundation\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+require __DIR__.'/vendor/autoload.php';
+
+$input = new ArgvInput();
+$command = $input->getFirstArgument();
+
+if ($command === 'serve') {
+    $host = $input->getParameterOption('--host') ?: '127.0.0.1';
+    $port = $input->getParameterOption('--port') ?: '8000';
+
+
+    $docsPath = '/api/documentation';
+
+    fwrite(STDOUT, "  INFO  API docs at    [http://{$host}:{$port}{$docsPath}].\n");
+}
+
+$app = require_once __DIR__.'/bootstrap/app.php';
+
+$status = $app->handleCommand($input);
+
+exit($status);
