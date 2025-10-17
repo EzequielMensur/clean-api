@@ -2,25 +2,20 @@
 
 namespace App\Presentation\Policies;
 
-use App\Models\User;
+use App\Domain\User\Entities\User as DomainUser;
+use Illuminate\Contracts\Auth\Authenticatable;
 
-class UserPolicy
+final class UserPolicy
 {
-    public function update(User $actor, User $target): bool
+    public function update(Authenticatable $auth, DomainUser $target): bool
     {
-        if ($actor->id === $target->id) {
-            return true;
-        }
-
-        return config('features.user_modify_others') === true;
+        return (int) $auth->getAuthIdentifier() === $target->id
+            || (bool) config('features.user_modify_others', false);
     }
 
-    public function delete(User $actor, User $target): bool
+    public function delete(Authenticatable $auth, DomainUser $target): bool
     {
-        if ($actor->id === $target->id) {
-            return true;
-        }
-
-        return config('features.user__others') === true;
+        return (int) $auth->getAuthIdentifier() === $target->id
+            || (bool) config('features.user_modify_others', false);
     }
 }

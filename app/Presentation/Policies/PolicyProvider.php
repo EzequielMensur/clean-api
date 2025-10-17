@@ -7,8 +7,8 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 class PolicyProvider extends ServiceProvider
 {
     protected $policies = [
-        \App\Models\Post::class => \App\Presentation\Policies\PostPolicy::class,
-        \App\Models\User::class => \App\Presentation\Policies\UserPolicy::class,
+        \App\Domain\Post\Entities\Post::class => \App\Presentation\Policies\PostPolicy::class,
+        \App\Domain\User\Entities\User::class => \App\Presentation\Policies\UserPolicy::class,
     ];
 
     public function boot(): void

@@ -2,35 +2,25 @@
 
 namespace App\Presentation\Policies;
 
-use App\Models\Post;
-use App\Models\User;
+use App\Domain\Post\Entities\Post as DomainPost;
+use Illuminate\Contracts\Auth\Authenticatable;
 
-class PostPolicy
+final class PostPolicy
 {
-    public function update(User $user, Post $post): bool
+    public function update(Authenticatable $auth, DomainPost $post): bool
     {
-        if ($user->id === $post->user_id) {
-            return true;
-        }
-
-        return (bool) config('features.post_modify_others');
+        return (int) $auth->getAuthIdentifier() === $post->userId
+            || (bool) config('features.post_modify_others', false);
     }
 
-    public function delete(User $user, Post $post): bool
+    public function delete(Authenticatable $auth, DomainPost $post): bool
     {
-        if ($user->id === $post->user_id) {
-            return true;
-        }
-
-        return (bool) config('features.post_modify_others');
+        return (int) $auth->getAuthIdentifier() === $post->userId
+            || (bool) config('features.post_modify_others', false);
     }
 
-    public function restore(User $user, Post $post): bool
+    public function restore(Authenticatable $auth, DomainPost $post): bool
     {
-        if ($user->id === $post->user_id) {
-            return true;
-        }
-
-        return (bool) config('features.post_modify_others');
+        return (int) $auth->getAuthIdentifier() === $post->userId;
     }
 }
