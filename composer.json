@@ -49,11 +49,11 @@
             "php artisan key:generate",
             "@php -r \"if (!file_exists('database/database.sqlite')) { if (!is_dir('database')) { mkdir('database', 0777, true); } touch('database/database.sqlite'); }\"",
             "php artisan migrate --seed",
-            "@php -r \"is_dir('storage/framework/views') || mkdir('storage/framework/views', 0777, true);\""
+            "@php -r \"is_dir('storage/framework/views') || mkdir('storage/framework/views', 0777, true);\"",
+            "composer dump-autoload -o"
          ],
          "app:dev": [
             "@php artisan config:clear",
-            "@composer dump-autoload -o",
             "@php artisan optimize:clear",
             "@php artisan l5-swagger:generate",
             "@php artisan route:list",
