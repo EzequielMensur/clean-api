@@ -5,17 +5,21 @@ namespace App\Presentation\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class UserResource extends JsonResource
-{
+{    public $resource;
+
     public function toArray($request): array
     {
+        unset($request);
+        $u = $this->resource;
+
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'username' => $this->username,
-            'posts_count' => $this->when(isset($this->posts_count), $this->posts_count),
-            'created_at' => optional($this->created_at)?->toAtomString(),
-            'updated_at' => optional($this->updated_at)?->toAtomString(),
+            'id'         => $u->id,
+            'name'       => $u->name,
+            'email'      => $u->email,
+            'username'   => $u->username,
+            'created_at' => $u->createdAt,
+            'updated_at' => $u->updatedAt,
+            'deleted_at' => $u->deletedAt,
         ];
     }
 }

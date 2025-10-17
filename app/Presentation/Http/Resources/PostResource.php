@@ -8,9 +8,6 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PostResource extends JsonResource
 {
-    /**
-     * @var PostDTO|PostModel
-     */
     public $resource;
 
     public function toArray($request): array
