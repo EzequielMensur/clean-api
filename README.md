@@ -16,10 +16,28 @@ Incluye:
 
 ## 🚀 Cómo levantar el proyecto por primera vez
 
+0. **Requisitos**
+    - PHP **>= 8.2**  
+     (Verificar con `php -v`)
+    
+   - Composer instalado globalmente  
+     (Verificar con `composer -V`)
+
+   - Extensiones PHP requeridas por Laravel:  
+     `pdo`, `pdo_sqlite`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`,  
+     `json`, `fileinfo`, `curl`, `dom`, `filter`, `bcmath`, `sodium`, `gd`, `intl`
+
+   - Git instalado  
+     (para clonar el repositorio)
+   - Node.js (opcional, solo si se piensa usar `npm` o frontend integrado)
+   - **Xdebug** (opcional) si se desea depurar o generar cobertura de tests.
+
+    En caso de no contar con las dependencias, buscar la seccion "Tutoriales para instalar dependencias"
+
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/tuusuario/laravel-clean-api.git
-   cd laravel-clean-api
+   git clone https://github.com/EzequielMensur/clean-api
+   cd clean-api
    ```
 
 2. **Inicializar el proyecto**
@@ -39,7 +57,6 @@ Incluye:
    php artisan tinker
    >>> \App\Models\User::count();
    >>> \App\Models\Post::count();
-   >>> \App\Models\User::withCount('posts')->orderByDesc('posts_count')->take(3)->get(['id','email']);
    ```
 5. **Ayuda en caso de error**
     Verificar dependencias con
@@ -158,8 +175,68 @@ Laravel 11, Eloquent ORM, JWT Auth, L5-Swagger, SQLite, Xdebug.
 
 ---
 
+## ⚡ Tutoriales para instalar dependencias
+
+
+0) Verificar winget 
+
+Tutorial: https://phoenixnap.com/kb/install-winget
+
+1) Instalar PHP 8.2+ y habilitar extensiones
+
+Tutorial: https://php.watch/articles/winget-install-php
+
+
+Editá el php.ini (ruta que te mostró php --ini) y asegurate de descomentar (quitar ;) estas líneas:
+
+extension=openssl
+extension=mbstring
+extension=curl
+extension=fileinfo
+extension=intl
+extension=gd
+extension=pdo_sqlite
+extension=bcmath
+extension=dom
+extension=xml
+extension=sodium
+
+2) Instalar Composer
+
+Tutorial: https://getcomposer.org/download/ 
+
+3) Instalar Git
+
+Tutorial: https://git-scm.com/downloads/win
+
+
+4) (Opcional) Xdebug para depuración
+
+
+Tutorial: https://xdebug.org/docs/install
+
+En php.ini, agregá (ajustando la ruta a tu php_xdebug.dll si usás DLL):
+
+zend_extension="C:\php\ext\php_xdebug-3.5.0alpha2-8.4-ts-vs17-x86_64.dll"
+xdebug.mode=develop,debug,coverage
+xdebug.client_port=9003
+xdebug.client_host=127.0.0.1 
+
+5) Chequeos rápidos
+
+php -v
+php -m | Select-String "mbstring|openssl|curl|intl|gd|pdo_sqlite|bcmath|dom|xml|sodium|fileinfo"
+composer -V
+composer check-platform-reqs
+git --version
+
+
+
 ## 👤 Autor
 
 **Ezequiel Mensur**  
 Desarrollador Fullstack 
 📧 contacto: [ezequielmensur@gmail.com]
+
+
+Arreglar sort name e id e list
