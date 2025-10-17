@@ -23,6 +23,6 @@ final class CreateUser
 
         $user = $this->repo->create($userData);
 
-        return UserOutput::fromModel($user);
+        return UserOutput::fromDomain($user);
     }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Application\User\DTOs;
 
-use App\Models\User;
+use App\Domain\User\Entities\User as DomainUser;
 
 final readonly class UserOutput
 {
@@ -13,19 +13,8 @@ final readonly class UserOutput
         public ?string $username,
         public string $createdAt,
         public string $updatedAt,
+        public ?string $deletedAt
     ) {}
-
-    public static function fromModel(User $u): self
-    {
-        return new self(
-            id: $u->id,
-            name: $u->name,
-            email: $u->email,
-            username: $u->username,
-            createdAt: $u->created_at?->toISOString() ?? '',
-            updatedAt: $u->updated_at?->toISOString() ?? '',
-        );
-    }
 
     public function toArray(): array
     {
@@ -36,6 +25,23 @@ final readonly class UserOutput
             'username' => $this->username,
             'created_at' => $this->createdAt,
             'updated_at' => $this->updatedAt,
+            'deletedAt' => $this->deletedAt,
+
         ];
+    }
+
+     public static function fromDomain(DomainUser $u): self
+    {
+         $fmt = static fn (? \DateTimeImmutable $d) => $d?->format(\DateTimeInterface::ATOM);
+
+        return new self(
+            id: $u->id,
+            name: $u->name,
+            email: $u->email,
+            username: $u->username,
+            createdAt: $u->createdAt->format(\DateTimeInterface::ATOM),
+            updatedAt: $u->updatedAt->format(\DateTimeInterface::ATOM),
+            deletedAt: $fmt($u->deletedAt),
+        );
     }
 }

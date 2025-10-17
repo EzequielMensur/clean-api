@@ -20,6 +20,7 @@ final class ShowUser
             username: $user->username,
             createdAt: $user->createdAt?->format('c') ?? null,
             updatedAt: $user->updatedAt?->format('c') ?? null,
+            deletedAt :$user->deletedAt?->format('c') ?? null
         );
     }
 }
