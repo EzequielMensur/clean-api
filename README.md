@@ -237,6 +237,3 @@ git --version
 **Ezequiel Mensur**  
 Desarrollador Fullstack 
 📧 contacto: [ezequielmensur@gmail.com]
-
-
-Arreglar sort name e id e list
