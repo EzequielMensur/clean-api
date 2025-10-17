@@ -10,7 +10,7 @@ class UsersTableSeeder extends Seeder
     {
         \App\Models\User::firstOrCreate(
             ['email' => 'demo@example.com'],
-            ['name' => 'Demo', 'password' => 'secret', 'username' => 'demo', 'email_verified_at' => now()]
+            ['name' => 'Demo', 'password' => 'secret', 'username' => 'demo']
         );
 
         if (\App\Models\User::count() < 10) {

@@ -13,7 +13,6 @@ class UserFactory extends Factory
             'email' => $this->faker->unique()->safeEmail(),
             'password' => 'secret',
             'username' => $this->faker->unique()->userName(),
-            'email_verified_at' => null,
         ];
     }
 }
