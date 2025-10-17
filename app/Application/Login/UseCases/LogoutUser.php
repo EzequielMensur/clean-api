@@ -1,24 +1,14 @@
 <?php
-
 namespace App\Application\Login\UseCases;
 
-use App\Application\Login\DTOs\RefreshResponseDto;
-use App\Domain\Services\TokenService;
+use App\Application\Auth\Ports\TokenService;
 
 final class LogoutUser
 {
-    public function __construct(
-        private readonly TokenService $tokens
-    ) {}
+    public function __construct(private TokenService $tokens) {}
 
-    public function __invoke(): RefreshResponseDto
+    public function __invoke(string $token): void
     {
-        $newToken = $this->tokens->refresh();
-
-        return new RefreshResponseDto(
-            token: $newToken,
-            tokenType: 'Bearer',
-            expiresIn: config('jwt.ttl') * 60
-        );
+        $this->tokens->invalidate($token);
     }
 }

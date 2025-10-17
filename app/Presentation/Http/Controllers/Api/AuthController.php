@@ -2,78 +2,72 @@
 
 namespace App\Presentation\Http\Controllers\Api;
 
+use App\Application\Login\DTOs\LoginRequestDto;
+use App\Application\Login\UseCases\LoginUser;
+use App\Application\Login\UseCases\LogoutUser;
+use App\Application\Login\UseCases\RefreshToken;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Throwable;
-use Tymon\JWTAuth\Exceptions\TokenExpiredException;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(Request $request, LoginUser $login)
     {
         $data = $request->validate([
-            'email' => ['required', 'email'],
+            'email'    => ['required', 'email'],
             'password' => ['required', 'string'],
         ]);
 
-        if (! $token = JWTAuth::attempt($data)) {
+        $dto = new LoginRequestDto($data['email'], $data['password']);
+        $res = $login($dto);
+
+        if (!$res) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);
         }
 
-        $minutes = (int) config('jwt.ttl', 15);
-        $cookie = $this->makeJwtCookie($token, $minutes);
+        $minutes = (int) ceil($res->expiresIn / 60);
+        $cookie  = $this->makeJwtCookie($res->token, $minutes);
 
         return response()->json([
             'access_token' => 'ok',
-            'expires_in' => $minutes * 60,
-            'token_type' => 'Bearer',
-        ], 200)->cookie($cookie);
+            'expires_in'   => $res->expiresIn,
+            'token_type'   => $res->tokenType,
+        ])->cookie($cookie);
     }
 
-    public function refresh(Request $request)
+    public function refresh(Request $request, RefreshToken $refresh)
     {
-        // Tomamos de header o cookie
         $token = $request->bearerToken() ?: $request->cookie('access_token');
-        if (! $token) {
+        if (!$token) {
             return response()->json(['message' => 'Token no provisto'], 401);
         }
 
         try {
-            $new = JWTAuth::setToken($token)->refresh();
-        } catch (TokenExpiredException) {
-            return response()->json(['message' => 'Token expirado'], 401);
+            $res = $refresh($token);
         } catch (Throwable) {
-            return response()->json(['message' => 'Token inválido'], 401);
+            return response()->json(['message' => 'Token inválido o expirado'], 401);
         }
 
-        $minutes = (int) config('jwt.ttl');
-        $cookie = $this->makeJwtCookie($new, $minutes);
+        $minutes = (int) ceil($res->expiresIn / 60);
+        $cookie  = $this->makeJwtCookie($res->token, $minutes);
 
         return response()->json([
-            'message' => 'refreshed',
-            'expires_in' => $minutes * 60,
-            'token_type' => 'Bearer',
-        ], 200)->cookie($cookie);
+            'message'    => $res->message,
+            'expires_in' => $res->expiresIn,
+            'token_type' => $res->tokenType,
+        ])->cookie($cookie);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request, LogoutUser $logout)
     {
         $token = $request->bearerToken() ?: $request->cookie('access_token');
 
         if ($token) {
-            try {
-                JWTAuth::setToken($token)->invalidate();
-            } catch (Throwable) {
-                // ignoramos si ya estaba inválido
-            }
+            try { $logout($token); } catch (Throwable) { /* ya inválido, ignorar */ }
         }
 
-        $forget = cookie()->forget(
-            'access_token',
-            '/',
-            $this->cookieDomain()
-        );
+        $forget = cookie()->forget('access_token', '/', $this->cookieDomain());
 
         return response()->json(['message' => 'ok'])->cookie($forget);
     }
@@ -84,9 +78,9 @@ class AuthController extends Controller
 
         return $user
             ? response()->json([
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
+                'id'       => $user->id,
+                'name'     => $user->name,
+                'email'    => $user->email,
                 'username' => $user->username,
             ])
             : response()->json(['message' => 'No autenticado'], 401);

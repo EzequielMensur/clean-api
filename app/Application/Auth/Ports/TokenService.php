@@ -1,14 +1,14 @@
 <?php
-
-namespace App\Domain\Services;
-
-use App\Domain\User\Entities\User;
+namespace App\Application\Auth\Ports;
 
 interface TokenService
 {
-    public function forUser(User $user): string;
     public function attempt(string $email, string $password): ?string;
+
     public function refresh(string $token): string;
     public function invalidate(string $token): void;
+
     public function userId(string $token): ?int;
+    public function tokenType(): string;
+    public function ttlSeconds(): int;
 }

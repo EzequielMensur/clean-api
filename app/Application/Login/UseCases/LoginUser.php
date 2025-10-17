@@ -1,29 +1,25 @@
 <?php
-
 namespace App\Application\Login\UseCases;
 
+use App\Application\Auth\Ports\TokenService;
 use App\Application\Login\DTOs\LoginRequestDto;
 use App\Application\Login\DTOs\LoginResponseDto;
-use App\Domain\Services\TokenService;
-use App\Domain\User\Repositories\UserRepository;
 
 final class LoginUser
 {
-    public function __construct(
-        private readonly UserRepository $users,
-        private readonly TokenService $tokens
-    ) {}
+    public function __construct(private TokenService $tokens) {}
 
-    public function __invoke(LoginRequestDto $dto): ?LoginResponseDto
+    public function __invoke(LoginRequestDto $req): ?LoginResponseDto
     {
-        $user = $this->users->findByEmail($dto->email);
-
-        $token = $this->tokens->fromUser($user);
+        $token = $this->tokens->attempt($req->email, $req->password);
+        if (!$token) {
+            return null;
+        }
 
         return new LoginResponseDto(
-            token: $token,
-            tokenType: 'Bearer',
-            expiresIn: config('jwt.ttl') * 60
+            tokenType: $this->tokens->tokenType(),
+            expiresIn: $this->tokens->ttlSeconds(),
+            token: $token
         );
     }
 }
