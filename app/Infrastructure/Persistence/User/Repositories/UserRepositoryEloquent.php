@@ -3,62 +3,92 @@
 namespace App\Infrastructure\Persistence\User\Repositories;
 
 use App\Domain\User\Repositories\UserRepository;
+use App\Domain\User\Entities\User as DomainUser;
+use App\Infrastructure\Persistence\User\Mappers\UserMapper;
 use App\Models\User as EloquentUser;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 final class UserRepositoryEloquent implements UserRepository
 {
-    public function findByEmail(string $email): ?EloquentUser
+    public function paginate(?string $q, int $page, int $perPage, string $sort): array
     {
-        return EloquentUser::where('email', $email)->first();
-    }
-
-    public function paginate(string $q = '', int $perPage = 10): LengthAwarePaginator
-    {
-        return EloquentUser::query()
-            ->when($q !== '', fn ($qq) => $qq->where(fn ($w) => $w
+        $builder = EloquentUser::query()
+            ->when($q !== null && $q !== '', fn ($qq) => $qq->where(fn ($w) => $w
                 ->where('name', 'like', "%{$q}%")
                 ->orWhere('email', 'like', "%{$q}%")
                 ->orWhere('username', 'like', "%{$q}%")
-            )
-            )
-            ->withCount('posts')
-            ->orderByDesc('id')
-            ->paginate($perPage);
+            ));
+
+        $dir = str_starts_with($sort, '-') ? 'desc' : 'asc';
+        $col = ltrim($sort, '-');
+        if (!in_array($col, ['id','name'], true)) { $col = 'id'; $dir = 'desc'; }
+
+        $p = $builder->orderBy($col, $dir)
+                     ->paginate($perPage, ['*'], 'page', $page);
+
+        return [
+            'data'         => array_map([UserMapper::class, 'toDomain'], $p->items()),
+            'current_page' => $p->currentPage(),
+            'per_page'     => $p->perPage(),
+            'total'        => $p->total(),
+            'last_page'    => $p->lastPage(),
+        ];
     }
 
-    public function find(int $id): EloquentUser
+    public function find(int $id): DomainUser
     {
-        return EloquentUser::withCount('posts')->findOrFail($id);
+        $m = EloquentUser::findOrFail($id);
+        return UserMapper::toDomain($m);
     }
 
-    public function create(array $data): EloquentUser
+    public function findByEmail(string $email): ?DomainUser
+    {
+        $m = EloquentUser::where('email', $email)->first();
+        return $m ? UserMapper::toDomain($m) : null;
+    }
+
+    public function create(array $data): DomainUser
     {
         [$email, $username] = $this->normalizeIdentity($data);
 
-        return DB::transaction(function () use ($data, $email, $username): \App\Models\User {
-
+        $model = DB::transaction(function () use ($data, $email, $username): EloquentUser {
             $existing = $this->findExistingCandidate($email, $username);
 
             if ($existing && $existing->trashed()) {
-                return $this->restoreAndUpdate($existing, $data, $email, $username);
+                return $this->restoreAndUpdateModel($existing, $data, $email, $username);
             }
 
-            if ($existing instanceof \App\Models\User) {
-                throw new \RuntimeException('El email o username ya está en uso.');
+            if ($existing instanceof EloquentUser) {
+                throw new RuntimeException('El email o username ya está en uso.');
             }
 
-            return $this->createFresh($data, $email, $username);
+            return $this->createFreshModel($data, $email, $username);
         });
+
+        return UserMapper::toDomain($model);
     }
 
-    public function update(int $id, array $data): EloquentUser
+    public function update(int $id, array $data): DomainUser
     {
-        $u = EloquentUser::findOrFail($id);
+        $u = EloquentUser::withTrashed()->findOrFail($id);
+
+        if (array_key_exists('email', $data)) {
+            $data['email'] = strtolower(trim((string) $data['email']));
+        }
+        if (array_key_exists('username', $data)) {
+            $data['username'] = trim((string) $data['username']) ?: null;
+        }
+        if (array_key_exists('password', $data) && $data['password'] !== null) {
+            $data['password'] = Hash::make((string) $data['password']);
+        } else {
+            unset($data['password']);
+        }
+
         $u->fill($data)->save();
 
-        return $u;
+        return UserMapper::toDomain($u->fresh());
     }
 
     public function delete(int $id): void
@@ -67,15 +97,14 @@ final class UserRepositoryEloquent implements UserRepository
         $u->delete();
     }
 
-    public function restore(int $id): EloquentUser
+    public function restore(int $id): DomainUser
     {
         $u = EloquentUser::withTrashed()->findOrFail($id);
-        if (! $u->trashed()) {
-            return $u;
+        if ($u->trashed()) {
+            $u->restore();
+            $u->refresh();
         }
-        $u->restore();
-
-        return $u->fresh();
+        return UserMapper::toDomain($u);
     }
 
     private function normalizeIdentity(array $data): array
@@ -96,33 +125,38 @@ final class UserRepositoryEloquent implements UserRepository
             : null;
 
         if ($byEmail && $byUsername && $byEmail->id !== $byUsername->id) {
-            throw new \RuntimeException('Conflicto: email y username pertenecen a usuarios distintos.');
+            throw new RuntimeException('Conflicto: email y username pertenecen a usuarios distintos.');
         }
 
         return $byEmail ?: $byUsername;
     }
 
-    private function restoreAndUpdate(EloquentUser $user, array $data, string $email, ?string $username): EloquentUser
+    private function restoreAndUpdateModel(EloquentUser $user, array $data, string $email, ?string $username): EloquentUser
     {
         $user->restore();
 
-        $user->fill([
-            'name' => $data['name'] ?? $user->name,
-            'email' => $email,
+        $payload = [
+            'name'     => $data['name'] ?? $user->name,
+            'email'    => $email,
             'username' => $username,
-            'password' => $data['password'] ?? $user->password,
-        ])->save();
+        ];
+
+        if (!empty($data['password'])) {
+            $payload['password'] = Hash::make((string) $data['password']);
+        }
+
+        $user->fill($payload)->save();
 
         return $user;
     }
 
-    private function createFresh(array $data, string $email, ?string $username): EloquentUser
+    private function createFreshModel(array $data, string $email, ?string $username): EloquentUser
     {
         $u = new EloquentUser;
         $u->name = $data['name'];
         $u->email = $email;
         $u->username = $username;
-        $u->password = $data['password'];
+        $u->password = Hash::make((string) $data['password']); // IMPORTANTÍSIMO
         $u->save();
 
         return $u;

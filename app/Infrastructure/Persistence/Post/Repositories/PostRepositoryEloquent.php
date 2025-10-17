@@ -19,17 +19,13 @@ final class PostRepositoryEloquent implements PostRepository
         bool $withTrashed = false,
         bool $onlyTrashed = false,
     ): array {
-        /** @var Builder $qb */
         $qb = EloquentPost::query();
 
-        // soft deletes
         if ($onlyTrashed) {
             $qb->onlyTrashed();
         } elseif ($withTrashed) {
             $qb->withTrashed();
         }
-
-        // filtros
         if ($q !== null && $q !== '') {
             $term = trim($q);
             $qb->where(function (Builder $w) use ($term): void {
@@ -41,8 +37,6 @@ final class PostRepositoryEloquent implements PostRepository
         if ($userId !== null) {
             $qb->where('user_id', $userId);
         }
-
-        // orden
         $sort = $sort ?: '-id';
         if ($sort === '-id') {
             $qb->orderByDesc('id');
@@ -51,14 +45,13 @@ final class PostRepositoryEloquent implements PostRepository
         } elseif ($sort === 'title') {
             $qb->orderBy('title');
         } else {
-            // fallback
             $qb->orderByDesc('id');
         }
 
         $paginator = $qb->paginate($perPage, ['*'], 'page', $page);
 
         $items = array_map(
-            fn ($model): \App\Domain\Post\Entities\Post => PostMapper::toDomain($model),
+            fn ($model): DomainPost => PostMapper::toDomain($model),
             $paginator->items()
         );
 
@@ -77,8 +70,6 @@ final class PostRepositoryEloquent implements PostRepository
         if ($withTrashed) {
             $qb->withTrashed();
         }
-
-        /** @var EloquentPost $post */
         $post = $qb->findOrFail($id);
 
         return PostMapper::toDomain($post);
@@ -110,7 +101,6 @@ final class PostRepositoryEloquent implements PostRepository
 
     public function delete(int $id): void
     {
-        /** @var EloquentPost $post */
         $post = EloquentPost::findOrFail($id);
         $post->delete();
     }

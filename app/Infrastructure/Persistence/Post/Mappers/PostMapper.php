@@ -14,9 +14,9 @@ final class PostMapper
             userId: (int) $p->user_id,
             title: (string) $p->title,
             body: (string) $p->body,
-            createdAt: $p->created_at?->toAtomString(),
-            updatedAt: $p->updated_at?->toAtomString(),
-            deletedAt: $p->deleted_at?->toAtomString(),
+            createdAt: $p->created_at,
+            updatedAt: $p->updated_at,
+            deletedAt: $p->deleted_at,
         );
     }
 }

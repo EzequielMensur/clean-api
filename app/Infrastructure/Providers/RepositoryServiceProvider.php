@@ -16,5 +16,10 @@ final class RepositoryServiceProvider extends ServiceProvider
             \App\Domain\Post\Repositories\PostRepository::class,
             \App\Infrastructure\Persistence\Post\Repositories\PostRepositoryEloquent::class
         );
+
+        $this->app->bind(
+    \App\Application\Auth\Ports\TokenService::class,
+    \App\Infrastructure\Auth\JwtTokenService::class
+        );
     }
 }
