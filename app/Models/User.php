@@ -19,8 +19,10 @@ class User extends Authenticatable implements JWTSubject
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'   => 'hashed',
+            'created_at' => 'immutable_datetime',
+            'updated_at' => 'immutable_datetime',
+            'deleted_at' => 'immutable_datetime',
         ];
     }
 
@@ -29,18 +31,19 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(Post::class);
     }
 
-    public function scopeSearch($q, string $term = '')
+    protected static function booted(): void
     {
-        $term = trim($term);
-        if ($term === '') {
-            return $q;
-        }
+        static::deleting(function (User $user): void {
+            $user->posts()->delete();
+        });
 
-        return $q->where(fn ($w) => $w
-            ->where('name', 'like', "%{$term}%")
-            ->orWhere('email', 'like', "%{$term}%")
-            ->orWhere('username', 'like', "%{$term}%")
-        );
+        static::restoring(function (User $user): void {
+            $user->posts()->withTrashed()->restore();
+        });
+
+        static::forceDeleted(function (User $user): void {
+            $user->posts()->withTrashed()->forceDelete();
+        });
     }
 
     public function getJWTIdentifier()
