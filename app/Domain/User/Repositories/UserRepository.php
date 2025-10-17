@@ -2,20 +2,21 @@
 
 namespace App\Domain\User\Repositories;
 
-use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Domain\User\Entities\User as DomainUser;
 
 interface UserRepository
 {
-    public function paginate(string $q = '', int $perPage = 10): LengthAwarePaginator;
+    public function paginate(?string $q, int $page, int $perPage, string $sort): array;
 
-    public function find(int $id): User;
+    public function find(int $id): DomainUser;
 
-    public function create(array $data): User;
+    public function findByEmail(string $email): ?DomainUser;
 
-    public function update(int $id, array $data): User;
+    public function create(array $data): DomainUser;
+
+    public function update(int $id, array $data): DomainUser;
+
+    public function restore(int $id): DomainUser;
 
     public function delete(int $id): void;
-
-    public function findByEmail(string $email): ?User;
 }
