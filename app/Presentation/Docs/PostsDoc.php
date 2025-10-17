@@ -175,28 +175,6 @@ final class PostsDoc
     )]
     public function updatePostDoc(): void {}
 
-    #[OA\Patch(
-        path: '/posts/{id}',
-        tags: ['Posts'],
-        security: [['bearerAuth' => []]],
-        summary: 'Actualizar parcialmente un post',
-        parameters: [
-            new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
-        ],
-        requestBody: new OA\RequestBody(
-            required: true,
-            content: new OA\JsonContent(ref: '#/components/schemas/PostUpdate')
-        ),
-        responses: [
-            new OA\Response(response: 200, description: 'Actualizado', content: new OA\JsonContent(ref: '#/components/schemas/Post')),
-            new OA\Response(response: 401, description: 'No autorizado', content: new OA\JsonContent(ref: '#/components/schemas/ApiError')),
-            new OA\Response(response: 403, description: 'Prohibido', content: new OA\JsonContent(ref: '#/components/schemas/ApiError')),
-            new OA\Response(response: 404, description: 'No encontrado', content: new OA\JsonContent(ref: '#/components/schemas/ApiError')),
-            new OA\Response(response: 422, description: 'Validación fallida', content: new OA\JsonContent(ref: '#/components/schemas/ApiError')),
-        ]
-    )]
-    public function patchPostDoc(): void {}
-
     /* =========================
      *   ELIMINAR (DELETE /posts/{id})
      * ========================= */
@@ -221,7 +199,7 @@ final class PostsDoc
         path: '/posts/{id}/restore',
         tags: ['Posts'],
         security: [['bearerAuth' => []]],
-        summary: 'Restaurar un post soft-deleted',
+        summary: 'Restaurar un post soft-deleted, solo usuario resgistrado',
         parameters: [
             new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer')),
         ],
