@@ -25,7 +25,7 @@ Incluye:
 
    - Extensiones PHP requeridas por Laravel:  
      `pdo`, `pdo_sqlite`, `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`,  
-     `json`, `fileinfo`, `curl`, `dom`, `filter`, `bcmath`, `sodium`, `gd`, `intl`
+     `json`, `fileinfo`, `curl`, `dom`, `filter`, `bcmath`, `sodium`, `gd`, `intl` ,  `zip`
 
    - Git instalado  
      (para clonar el repositorio)
